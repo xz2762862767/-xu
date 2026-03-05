@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REMOTE CONTROL SYSTEM</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Consolas,monospace}
+body{background:#000;color:#fff;padding:20px}
+.container{max-width:900px;margin:0 auto}
+.title{text-align:center;font-size:28px;color:#ff003c;text-shadow:0 0 10px #ff003c;margin:30px 0}
+.login-box{max-width:400px;margin:50px auto;padding:30px;border:1px solid #ff003c;box-shadow:0 0 20px #ff003c;border-radius:8px;background:rgba(0,0,0,.9)}
+.login-box input{width:100%;padding:12px;background:#111;border:1px solid #ff003c;color:#fff;margin-bottom:15px;border-radius:4px}
+.login-box button{width:100%;padding:12px;background:#ff003c;color:#fff;border:none;border-radius:4px;cursor:pointer}
+.admin{margin:20px 0;padding:15px;background:#111;border:1px solid #ff003c;border-radius:6px;color:#0f0;font-size:14px}
+.log{margin:20px 0;padding:15px;background:#111;border:1px solid #444;border-radius:6px;color:#0f0;font-size:12px;max-height:300px;overflow-y:auto}
+.card{background:rgba(0,0,0,.8);border:1px solid #ff003c;box-shadow:0 0 15px #ff003c;border-radius:8px;padding:20px;margin-bottom:15px;display:flex;align-items:center;gap:18px}
+.icon{width:50px;height:50px;background:#222;border:2px solid #ff003c;border-radius:6px;display:grid;place-items:center;color:#ff003c;font-size:22px}
+.info{flex:1}
+.name{font-size:18px;color:#ff003c;font-weight:bold;margin-bottom:6px}
+.desc{font-size:14px;color:#ccc;margin-bottom:6px}
+.version{font-size:12px;color:#888}
+.down{padding:10px 16px;background:#ff003c;color:#fff;border:none;border-radius:4px;cursor:pointer;text-decoration:none}
+.down:hover{background:#ff2255}
+.clear{margin-top:10px;padding:8px 12px;background:#222;color:#ff003c;border:1px solid #ff003c;border-radius:4px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title">>>> REMOTE CONTROL SYSTEM</div>
+  <div id="login" class="login-box">
+    <input type="password" id="pwd" placeholder="输入管理员密码">
+    <button onclick="login()">登录系统</button>
+  </div>
+
+  <div id="main" style="display:none">
+    <div class="admin">
+      <div id="info">加载中...</div>
+      <button class="clear" onclick="clearLog()">清空日志</button>
+    </div>
+    <div class="log" id="log"></div>
+
+    <div class="card">
+      <div class="icon">R1</div>
+      <div class="info">
+        <div class="name">远程控制主控端</div>
+        <div class="desc">全功能远程控制、文件传输、屏幕监控、命令执行</div>
+        <div class="version">v4.5.2 | Windows</div>
+      </div>
+      <a href="#" class="down" onclick="logDown('主控端')">立即下载</a>
+    </div>
+    <div class="card">
+      <div class="icon">R2</div>
+      <div class="info">
+        <div class="name">被控端客户端</div>
+        <div class="desc">后台静默运行、自动上线、无界面守护</div>
+        <div class="version">v4.5.2 | Windows</div>
+      </div>
+      <a href="#" class="down" onclick="logDown('被控端')">立即下载</a>
+    </div>
+    <div class="card">
+      <div class="icon">R3</div>
+      <div class="info">
+        <div class="name">Linux 远程控制端</div>
+        <div class="desc">服务器远程管理、SSH 集成、文件上传下载</div>
+        <div class="version">v2.1.0 | Linux x64</div>
+      </div>
+      <a href="#" class="down" onclick="logDown('Linux端')">立即下载</a>
+    </div>
+    <div class="card">
+      <div class="icon">R4</div>
+      <div class="info">
+        <div class="name">Android 远程工具</div>
+        <div class="desc">手机远程控制、屏幕查看、文件管理</div>
+        <div class="version">v1.8.5 | Android</div>
+      </div>
+      <a href="#" class="down" onclick="logDown('安卓端')">立即下载</a>
+    </div>
+    <div class="card">
+      <div class="icon">R5</div>
+      <div class="info">
+        <div class="name">配置生成器</div>
+        <div class="desc">自定义IP、端口、密钥、自动生成客户端</div>
+        <div class="version">v1.2.0 | Windows</div>
+      </div>
+      <a href="#" class="down" onclick="logDown('配置生成器')">立即下载</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================== 配置 ==================
+const PASS = "admin123";
+
+// 获取 IP（模拟）
+async function getIP() {
+  try {
+    let r = await fetch("https://api.ipify.org?format=json");
+    let d = await r.json();
+    return d.ip;
+  } catch (e) {
+    return "127.0.0.1";
+  }
+}
+
+// ================== 日志 ==================
+function loadLog(){
+  return JSON.parse(localStorage.getItem("down_log") || "[]");
+}
+function saveLog(log){
+  localStorage.setItem("down_log", JSON.stringify(log));
+}
+async function addLog(text){
+  let log = loadLog();
+  let time = new Date().toLocaleString();
+  let ip = await getIP();
+  log.push(`[${time}] [${ip}] ${text}`);
+  saveLog(log);
+  showLog();
+  showInfo();
+}
+function showLog(){
+  let log = loadLog();
+  document.getElementById("log").innerText = log.join("\n");
+}
+function clearLog(){
+  if(!confirm("确定清空所有日志？")) return;
+  saveLog([]);
+  showLog();
+  showInfo();
+}
+
+// ================== 统计 ==================
+function showInfo(){
+  let log = loadLog();
+  let total = log.length;
+  document.getElementById("info").innerText = `总操作记录：${total} 条`;
+}
+
+// ================== 登录 ==================
+async function login(){
+  let v = document.getElementById("pwd").value;
+  if(v === PASS){
+    document.getElementById("login").style.display = "none";
+    document.getElementById("main").style.display = "block";
+    showLog();
+    showInfo();
+    await addLog("管理员登录系统");
+  }else{
+    alert("密码错误");
+  }
+}
+
+// ================== 下载记录 ==================
+async function logDown(name){
+  await addLog(`${name} 下载成功`);
+}
+</script>
+</body>
+</html>
